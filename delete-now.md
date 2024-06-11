@@ -1,44 +1,50 @@
-Here is a Jira story for the task:
+Certainly! Here’s the updated email with a new section about observability with Jaeger:
 
 ---
 
-**Title:** Remove Permissions for IBM Contractors in OpenShift MFTS Cluster
+**Subject: Inquiry on Linkerd Integration and Best Practices**
 
-**Description:**
-As part of our security and compliance process, we need to remove permissions for IBM contractors who are no longer working on the MFTS contract. This involves updating the user groups in the Git repository to ensure ArgoCD can sync these changes. The process is managed through GitOps using ArgoCD.
 
-**Acceptance Criteria:**
-1. Identify all IBM contractors who no longer work on the MFTS contract.
-2. Remove the identified users from the relevant user groups in the Git repository.
-3. Ensure the changes are committed and pushed to the repository.
-4. Verify ArgoCD syncs the changes to remove the permissions in OpenShift.
-5. Confirm that the users no longer have access to the MFTS cluster.
+To ensure we are utilizing Linkerd to its full potential, we have several questions regarding its integration with Prometheus, useful metrics, observability, and Horizontal Pod Autoscaling (HPA). Below are the specific areas we would like to discuss:
 
-**Tasks:**
-1. Review the list of IBM contractors and identify those no longer with the MFTS contract.
-2. Access the Git repository containing the user group definitions.
-3. Remove the identified users from the appropriate user groups.
-4. Commit and push the changes to the repository.
-5. Monitor ArgoCD to ensure it syncs the changes.
-6. Verify the removal of permissions in OpenShift.
+1. **Integration with Prometheus**
+   - What are the best practices for integrating Linkerd with Prometheus?
+   - Are there any specific configurations or settings needed to ensure optimal data collection?
+   - How can we leverage Linkerd's built-in metrics with Prometheus for detailed insights?
 
-**Assumptions:**
-- The list of IBM contractors is up to date.
-- Appropriate permissions to access and modify the Git repository are available.
-- ArgoCD is properly configured to sync changes from the Git repository to OpenShift.
+2. **Useful Metrics from Linkerd**
+   - What are the most useful metrics provided by Linkerd for monitoring service health and performance?
+   - How can we interpret these metrics to gain actionable insights?
+   - Are there any common pitfalls or misinterpretations of these metrics?
 
-**Dependencies:**
-- Updated list of IBM contractors.
-- Access to the Git repository and ArgoCD dashboard.
+3. **Using Linkerd for Observability**
+   - How can Linkerd be used to enhance observability within our Kubernetes clusters?
+   - What are the recommended tools and practices for visualizing and analyzing Linkerd data?
+   - Can Linkerd's data be integrated with other observability tools we might be using?
 
-**Priority:** Medium
+4. **Observability with Jaeger**
+   - How can we integrate Jaeger with Linkerd for distributed tracing?
+   - What are the best practices for setting up and configuring Jaeger to work seamlessly with Linkerd?
+   - Are there specific Jaeger metrics or traces that are particularly useful for monitoring and debugging our services?
+   - How can we use Jaeger to gain deeper insights into the performance and reliability of our microservices?
 
-**Story Points:** 3
+5. **Using Latency Metrics for HPA (Horizontal Pod Autoscaling)**
+   - How can we utilize Linkerd's latency metrics to drive Horizontal Pod Autoscaling (HPA) in our Kubernetes setup?
+   - Are there any specific configurations or settings needed to use these metrics effectively?
+   - What are the best practices for setting up autoscaling based on Linkerd's latency metrics?
 
-**Reporter:** [Your Name]
+6. **Patterns Used by Other Customers**
+   - Can you share some common patterns or success stories of other customers using Linkerd?
+   - What are some of the best practices adopted by other organizations for deploying and managing Linkerd?
+   - Are there any specific use cases or scenarios where Linkerd has significantly improved performance or reliability?
 
-**Assignee:** [Assignee's Name]
+We believe that gaining insights into these areas will significantly contribute to our goals of enhancing system performance and reliability. We would also appreciate any available documentation, case studies, or resources that could assist with our Linkerd implementation.
+
+Please let us know a convenient time for a meeting to discuss these points in detail. We are eager to learn from your expertise and ensure we are making the most out of Linkerd.
+
+Thank you for your time and support.
+
+Best regards,
+
 
 ---
-
-This Jira story outlines the necessary steps and criteria for removing permissions for the specified users from the OpenShift MFTS cluster.
