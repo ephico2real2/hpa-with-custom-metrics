@@ -60,3 +60,57 @@ The `400 Bad Request` errors occur due to Django's security feature, which uses 
      ERROR Invalid HTTP_HOST header: '<pod-ip>:5000'. You may need to add '<pod-ip>' to ALLOWED_HOSTS.
      ```
 ---
+Hello
+
+---
+
+### Jira Story
+
+**Title**: Create Helm Template for ServiceMonitor with Enabled/Disabled Options and Parameterization
+
+**Description**:
+As a DevOps engineer, I need to create a Helm template for `ServiceMonitor` resources, providing options to enable or disable them and allowing parameterization for flexibility. This will facilitate easier management and deployment of Prometheus monitoring configurations in Kubernetes.
+
+**Acceptance Criteria**:
+1. A Helm template for `ServiceMonitor` is created under the `templates` directory.
+2. The Helm template includes parameters to configure:
+   - ServiceMonitor name
+   - Namespace
+   - Selector labels
+   - Endpoints (port, interval, path, scheme)
+   - TLS configuration
+   - Job label
+   - Target labels
+   - Label matchers
+3. The Helm chart includes values to enable or disable the creation of the `ServiceMonitor`.
+4. The Helm values file includes default values for the `ServiceMonitor` configuration.
+5. Documentation is updated to describe how to configure and use the `ServiceMonitor` Helm template.
+
+**Tasks**:
+1. **Create Helm Template**:
+   - Create a new template file `servicemonitor.yaml` in the `templates` directory.
+   - Define the `ServiceMonitor` resource with placeholders for parameterization.
+  
+2. **Add Enabled/Disabled Option**:
+   - Add a condition in the template to create the `ServiceMonitor` only if enabled.
+   - Update the `values.yaml` file to include an `enabled` field for the `ServiceMonitor`.
+
+3. **Parameterize the Template**:
+   - Add parameters for `ServiceMonitor` configurations (name, namespace, selector labels, endpoints, etc.).
+   - Update the `values.yaml` file with default values for these parameters.
+
+4. **Update Documentation**:
+   - Update the `README.md` or relevant documentation files to describe how to enable and configure the `ServiceMonitor` using the Helm chart.
+
+**Estimated LOE**: 8 hours
+
+**Example Configuration in `values.yaml`**:
+- `enabled`: Boolean to enable or disable the ServiceMonitor.
+- `name`: Name of the ServiceMonitor.
+- `namespace`: Namespace where the ServiceMonitor will be created.
+- `selector.matchLabels`: Labels to select the target services.
+- `endpoints`: List of endpoints to be monitored, including port, interval, path, scheme, and TLS configuration.
+- `jobLabel`: Label to identify the job.
+- `targetLabels`: Labels to transfer to the target.
+- `labelMatchers`: Matchers to select specific pods or containers based on labels.
+
