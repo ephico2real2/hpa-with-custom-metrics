@@ -34,9 +34,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    jamf.com/team-name: {{ .Values.serviceMonitor.team.name }}
-    jamf.com/team-channel: {{ .Values.serviceMonitor.team.channel }}
-    jamf.com/thanos-monitored: {{ .Values.serviceMonitor.team.thanosMonitored }}
+    demo.com/team-name: {{ .Values.serviceMonitor.team.name }}
+    demo.com/team-channel: {{ .Values.serviceMonitor.team.channel }}
+    demo.com/thanos-monitored: {{ .Values.serviceMonitor.team.thanosMonitored }}
     {{ include "portal.labels" . | nindent 4 }}
   name: {{ include "portal.name" . }}-service-monitors
   namespace: {{ .Values.namespace }}
@@ -91,10 +91,10 @@ serviceMonitor:
         replacement: red-dawg
         targetLabel: team
       - action: replace
-        replacement: jamf-insights
+        replacement: demo-insights
         targetLabel: service
       - action: keep
-        regex: 'jamf_insights_.*'
+        regex: 'demo_insights_.*'
         sourceLabels:
           - __name__
 
