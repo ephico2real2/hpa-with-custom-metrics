@@ -177,3 +177,9 @@ The `metricRelabelings` configuration allows you to manipulate metrics before Pr
 - Exclude specific metrics from being counted (e.g., metrics from the `/metrics` endpoint).
 
 By adding a `drop` rule for the `/metrics` endpoint, you ensure that polling metrics are not included in Prometheus, enhancing the security and accuracy of your monitoring setup.
+
+---
+- https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/templates/prometheus/servicemonitor.yaml
+- https://christianhuth.de/making-your-helm-chart-observable-for-prometheus/
+
+---
