@@ -1,107 +1,179 @@
-Yes, the `portal.labels` function in the `_helpers.tpl` file generates a set of standard labels that reference the Helm chart and release information. These labels help identify which Helm chart and release created the resource, making it easier to manage and trace the source of the resources in your Kubernetes cluster.
+### Explanation of `metricRelabelings`
 
-Here's a refined approach to ensure that the labels are correctly applied and the template remains clean and maintainable:
+`metricRelabelings` in Prometheus `ServiceMonitor` configuration allows you to modify metrics as they are ingested into Prometheus. This can be useful for cleaning up, modifying, or dropping unwanted labels and metrics. Each `metricRelabeling` rule consists of several fields that control how the metrics are processed.
 
-### `_helpers.tpl`
+#### Fields in `metricRelabelings`
+
+1. **action:**
+   - Defines the action to be performed on the metric.
+   - Common actions include:
+     - `replace`: Replace the value of a label.
+     - `keep`: Keep only the metrics that match the criteria.
+     - `drop`: Drop the metrics that match the criteria.
+     - `hashmod`: Replace the value of a label with a modulo hash.
+     - `labelmap`: Rename label names according to a regex pattern.
+     - `labeldrop`: Drop labels that match the regex pattern.
+     - `labelkeep`: Keep only labels that match the regex pattern.
+
+2. **regex:**
+   - A regular expression used to match the label values.
+   - Only metrics whose label values match the regex will be affected by the action.
+
+3. **replacement:**
+   - The new value to replace the original label value.
+   - Used in combination with the `replace` action.
+
+4. **targetLabel:**
+   - The label that the action will apply to.
+   - Specifies which label's value should be modified.
+
+5. **sourceLabels:**
+   - A list of labels whose values are concatenated and matched against the `regex`.
+   - Useful when you want to perform an action based on the values of multiple labels.
+
+#### Example `metricRelabelings`
+
+Here's an example configuration in the context of your `values.yaml`:
 
 ```yaml
-{{/*
-Expand the chart name.
-*/}}
-{{- define "portal.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-Create standard labels for resources.
-*/}}
-{{- define "portal.labels" -}}
-app.kubernetes.io/name: {{ include "portal.name" . }}
-helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/version: {{ .Chart.AppVersion }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end -}}
+serviceMonitor:
+  enabled: true
+  team:
+    name: golden-state
+    channel: team-golden-state
+    thanosMonitored: "true"
+  additionalLabels: {}
+  honorLabels: false
+  interval: "30s"
+  jobLabel: ""
+  metricRelabelings:
+    - action: replace
+      replacement: golden-state
+      targetLabel: team
+    - action: replace
+      replacement: demo-insights
+      targetLabel: service
+    - action: keep
+      regex: 'demo_insights_.*'
+      sourceLabels:
+        - __name__
+    - action: drop
+      regex: '/metrics'
+      sourceLabels:
+        - __name__
+  path: "/metrics"
+  relabelings: {}
+  scrapeTimeout: "25s"
+namespace: datajar-django-sbox
 ```
 
-### `servicemonitor.yaml`
+### Exclude Polling for Metrics on `/metrics`
 
-Use the helper functions to apply the labels and name:
+To exclude polling for metrics on the `/metrics` endpoint from being counted, you can add a `metricRelabeling` rule with the `drop` action. This will drop any metrics that have the `/metrics` path in their label value.
+
+Here's how to do it in the `metricRelabelings` section:
+
+```yaml
+serviceMonitor:
+  enabled: true
+  team:
+    name: golden-state
+    channel: team-golden-state
+    thanosMonitored: "true"
+  additionalLabels: {}
+  honorLabels: false
+  interval: "30s"
+  jobLabel: ""
+  metricRelabelings:
+    - action: replace
+      replacement: golden-state
+      targetLabel: team
+    - action: replace
+      replacement: demo-insights
+      targetLabel: service
+    - action: keep
+      regex: 'demo_insights_.*'
+      sourceLabels:
+        - __name__
+    - action: drop
+      regex: '/metrics'
+      sourceLabels:
+        - __name__
+  path: "/metrics"
+  relabelings: {}
+  scrapeTimeout: "25s"
+namespace: datajar-django-sbox
+```
+
+### Updated `servicemonitor.yaml`
+
+Here is the updated Helm template for the `ServiceMonitor`, including the new `metricRelabeling` rule:
 
 ```yaml
 {{- if .Values.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
+  name: {{ include "portal.name" . }}-service-monitor
+  namespace: {{ .Values.namespace | quote }}
   labels:
+    {{- include "portal.labels" . | nindent 4 }}
     demo.com/team-name: {{ .Values.serviceMonitor.team.name }}
     demo.com/team-channel: {{ .Values.serviceMonitor.team.channel }}
     demo.com/thanos-monitored: {{ .Values.serviceMonitor.team.thanosMonitored }}
-    {{ include "portal.labels" . | nindent 4 }}
-  name: {{ include "portal.name" . }}-service-monitors
-  namespace: {{ .Values.namespace }}
+    {{- with .Values.serviceMonitor.additionalLabels }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Values.namespace }}
+      - {{ .Values.namespace | quote }}
   selector:
     matchLabels:
-{{ include "portal.labels" . | indent 6 }}
+      {{- include "portal.labels" . | nindent 6 }}
   endpoints:
-    - interval: {{ .Values.serviceMonitor.endpoints.interval }}
-      port: {{ .Values.serviceMonitor.endpoints.port }}
-      path: {{ .Values.serviceMonitor.endpoints.path }}
-      scrapeTimeout: {{ .Values.serviceMonitor.endpoints.scrapeTimeout }}
-      {{- if .Values.serviceMonitor.endpoints.metricRelabelings }}
+    - port: {{ .Values.serviceMonitor.port | quote }}
+      path: {{ .Values.serviceMonitor.path | quote }}
+      interval: {{ .Values.serviceMonitor.interval | quote }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout | quote }}
+      {{- if .Values.serviceMonitor.honorLabels }}
+      honorLabels: {{ .Values.serviceMonitor.honorLabels }}
+      {{- end }}
+      {{- with .Values.serviceMonitor.metricRelabelings }}
       metricRelabelings:
-{{ toYaml .Values.serviceMonitor.endpoints.metricRelabelings | indent 8 }}
+        {{- range . }}
+        - action: {{ .action }}
+          {{- if .regex }}
+          regex: '{{ .regex }}'
+          {{- end }}
+          {{- if .replacement }}
+          replacement: {{ .replacement | quote }}
+          {{- end }}
+          {{- if .targetLabel }}
+          targetLabel: {{ .targetLabel | quote }}
+          {{- end }}
+          {{- if .sourceLabels }}
+          sourceLabels:
+            {{- range .sourceLabels }}
+            - {{ . }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.serviceMonitor.relabelings }}
+      relabelings:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}
 ```
 
-### Explanation
-
-1. **Include Existing Labels in Metadata**:
-   - Adds the standard labels generated by the `portal.labels` helper to the metadata section of the `ServiceMonitor`.
-
-2. **Name Inclusion**:
-   - Uses the `portal.name` helper to generate a standardized name for the `ServiceMonitor`.
-
-3. **Selector Labels**:
-   - Uses the `portal.labels` helper to ensure the `selector.matchLabels` section matches the labels on the Kubernetes services.
-
-### Updated Example `values.yaml`
-
-Here’s an example `values.yaml` file with parameters:
-
-```yaml
-serviceMonitor:
-  enabled: true
-  team:
-    name: red-dawg
-    channel: team-red-dawg
-    thanosMonitored: "true"
-  endpoints:
-    interval: 30s
-    port: http
-    path: /metrics
-    scrapeTimeout: 25s
-    metricRelabelings:
-      - action: replace
-        replacement: red-dawg
-        targetLabel: team
-      - action: replace
-        replacement: demo-insights
-        targetLabel: service
-      - action: keep
-        regex: 'demo_insights_.*'
-        sourceLabels:
-          - __name__
-
-# Assuming the namespace is defined here or elsewhere in the values file
-namespace: datajar-django-sbox
-```
-
 ### Summary
 
-This approach ensures that the `ServiceMonitor` resource is created with the appropriate labels and name, referencing the Helm chart and release that created it. It maintains consistency across your Helm templates and leverages the existing label definitions for the selector, making the setup more manageable and traceable.
+The `metricRelabelings` configuration allows you to manipulate metrics before Prometheus stores them. You can use it to:
+- Replace labels with new values.
+- Keep only metrics that match certain criteria.
+- Drop unwanted metrics.
+- Rename labels based on a regex pattern.
+- Exclude specific metrics from being counted (e.g., metrics from the `/metrics` endpoint).
+
+By adding a `drop` rule for the `/metrics` endpoint, you ensure that polling metrics are not included in Prometheus, enhancing the security and accuracy of your monitoring setup.
